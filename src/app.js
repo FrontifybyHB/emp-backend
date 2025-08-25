@@ -12,6 +12,7 @@ import config from './config/config.js';
 import authRoutes from './routes/auth.routes.js';
 import employeeRoutes from './routes/employee.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
+import leaveRoutes from './routes/leave.routes.js';
 // import payrollRoutes from './routes/payroll.routes.js';
 // import performanceRoutes from './routes/performance.routes.js';
 
@@ -38,6 +39,7 @@ app.use(apiLimiter);
 app.use('/auth', authRoutes);
 app.use("/api/employees", employeeRoutes); 
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/leave', leaveRoutes);
 // app.use('/api/payroll', payrollRoutes);
 // app.use('/api/performance', performanceRoutes);
 

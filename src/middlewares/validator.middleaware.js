@@ -145,3 +145,77 @@ export const updateEmployeeValidator = [
         next();
     }
 ];
+
+export const requestLeaveValidator = [
+    body('startDate')
+        .notEmpty()
+        .withMessage('Start date is required')
+        .isISO8601()
+        .withMessage('Invalid start date format')
+        .custom((value) => {
+            const startDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (startDate < today) {
+                throw new Error('Start date cannot be in the past');
+            }
+            return true;
+        }),
+    body('endDate')
+        .notEmpty()
+        .withMessage('End date is required')
+        .isISO8601()
+        .withMessage('Invalid end date format')
+        .custom((value, { req }) => {
+            const startDate = new Date(req.body.startDate);
+            const endDate = new Date(value);
+            if (endDate < startDate) {
+                throw new Error('End date cannot be before start date');
+            }
+            return true;
+        }),
+    body('reason')
+        .notEmpty()
+        .withMessage('Reason is required')
+        .isLength({ min: 10, max: 500 })
+        .withMessage('Reason must be between 10 and 500 characters'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                message: "Validation failed",
+                errors: errors.array(),
+            });
+        }
+        next();
+    }
+];
+
+export const approveLeaveValidator = [
+    body('status')
+        .notEmpty()
+        .withMessage('Status is required')
+        .isIn(['Approved', 'Rejected'])
+        .withMessage('Status must be either Approved or Rejected'),
+    body('rejectionReason')
+        .optional()
+        .custom((value, { req }) => {
+            if (req.body.status === 'Rejected' && (!value || value.trim().length === 0)) {
+                throw new Error('Rejection reason is required when rejecting leave');
+            }
+            if (value && value.length > 200) {
+                throw new Error('Rejection reason cannot exceed 200 characters');
+            }
+            return true;
+        }),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                message: "Validation failed",
+                errors: errors.array(),
+            });
+        }
+        next();
+    }
+];
