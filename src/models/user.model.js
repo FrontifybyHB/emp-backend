@@ -1,6 +1,4 @@
-// models/user.model.js
 import mongoose from 'mongoose';
-import Employee from '../models/employee.model.js';
 
 const userSchema = new mongoose.Schema(
     {

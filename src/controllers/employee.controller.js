@@ -8,7 +8,6 @@ import {
 } from '../dao/employee.dao.js';
 
 
-// @desc Create new employee
 export const createEmployeeController = async (req, res, next) => {
     try {
         
@@ -24,7 +23,6 @@ export const createEmployeeController = async (req, res, next) => {
     }
 };
 
-// @desc Get all employees
 export const getEmployeesController = async (req, res, next) => {
     try {
         const { page = 1, limit = 10, department, role } = req.query;
@@ -53,7 +51,6 @@ export const getEmployeesController = async (req, res, next) => {
     }
 };
 
-// @desc Get employee by ID
 export const getEmployeeByIdController = async (req, res, next) => {
     try {
         const employee = await findEmployeeById(req.params.id);
@@ -74,7 +71,6 @@ export const getEmployeeByIdController = async (req, res, next) => {
     }
 };
 
-// @desc Update employee
 export const updateEmployeeController = async (req, res, next) => {
     try {
         const employee = await updateEmployeeDAO(req.params.id, req.body);
@@ -96,7 +92,6 @@ export const updateEmployeeController = async (req, res, next) => {
     }
 };
 
-// @desc Delete employee
 export const deleteEmployeeController = async (req, res, next) => {
     try {
         const employee = await deleteEmployeeDAO(req.params.id);

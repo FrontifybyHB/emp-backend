@@ -8,7 +8,6 @@ export function errorHandler(err, req, res, next) {
         return next(err);
     }
 
-    // Custom statusCode (e.g., err.statusCode = 404) or fallback 500
     const statusCode = err.statusCode || 500;
 
     console.error(err);

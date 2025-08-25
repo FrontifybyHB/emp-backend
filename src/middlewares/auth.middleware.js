@@ -2,14 +2,13 @@ import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 
 export const requireAuth = (req, res, next) => {
-    // First check Authorization header
+
     const auth = req.headers.authorization;
     let token;
 
     if (auth && auth.startsWith("Bearer ")) {
         token = auth.split(" ")[1];
     } else if (req.cookies && req.cookies.accessToken) {
-        // Fallback to cookie if no Authorization header
         token = req.cookies.accessToken;
     }
 
@@ -27,53 +26,7 @@ export const requireAuth = (req, res, next) => {
     }
 };
 
-export const requireRefreshAuth = async (req, res, next) => {
-    const refreshToken = req.cookies.refreshToken;
 
-    if (!refreshToken) {
-        return res.status(401).json({ message: "Missing refresh token" });
-    }
-
-    try {
-        const payload = jwt.verify(refreshToken, config.jwtRefreshSecret);
-        const user = await findUserById(payload.id);
-
-        if (!user || user.refreshToken !== refreshToken) {
-            return res.status(401).json({ message: "Invalid refresh token" });
-        }
-
-        req.user = user._id;
-        // console.log(req.user)
-        next();
-    } catch (err) {
-        console.warn("Invalid refresh token", err);
-        return res.status(401).json({ message: "Invalid refresh token" });
-    }
-};
-
-export const refreshToken = async (req, res, next) => {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-        return res.status(401).json({ message: "Missing refresh token" });
-    }
-
-    try {
-        const payload = jwt.verify(refreshToken, config.jwtRefreshSecret);
-        const user = await findUserById(payload.id);
-        if (!user || user.refreshToken !== refreshToken) {
-            return res.status(401).json({ message: "Invalid refresh token" });
-        }
-        const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-        user.refreshToken = newRefreshToken;
-        await user.save();
-        res.cookie('refreshToken', newRefreshToken, { httpOnly: true });
-        res.cookie('accessToken', accessToken, { httpOnly: true });
-        res.json({ accessToken });
-    } catch (err) {
-        console.warn("Invalid refresh token", err);
-        return res.status(401).json({ message: "Invalid refresh token" });
-    }
-};
 
 export const requireAdmin = (req, res, next) => {
     if (!req.user || req.user.role !== "admin") {

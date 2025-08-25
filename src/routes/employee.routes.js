@@ -12,48 +12,39 @@ import { requireAuth, permit, requireAdmin } from '../middlewares/auth.middlewar
 
 const router = express.Router();
 
-// Apply authentication to all routes
-router.use(requireAuth);
-
-
-// @desc Create employee
-// @route POST /api/employees
 router.post('/', 
     apiLimiter, 
+    requireAuth,
     permit('admin', 'hr'), 
     createEmployeeValidator,
     createEmployeeController
 );
 
-// @desc Get all employees
-// @route GET /api/employees
 router.get('/', 
     apiLimiter, 
+    requireAuth,
     permit('admin', 'hr', 'manager'), 
     getEmployeesController
 );
 
-// @desc Get employee by ID
-// @route GET /api/employees/:id
 router.get('/:id', 
     apiLimiter, 
+    requireAuth,
     permit('admin', 'hr', 'manager', 'employee'), 
     getEmployeeByIdController
 );
 
-// @desc Update employee
-// @route PUT /api/employees/:id
 router.put('/:id', 
     apiLimiter, 
+    requireAuth,
     permit('admin', 'hr'), 
     updateEmployeeValidator,
     updateEmployeeController
 );
 
-// @desc Delete employee
-// @route DELETE /api/employees/:id
 router.delete('/:id', 
     apiLimiter, 
+    requireAuth,
     requireAdmin,
     permit('admin'), 
     deleteEmployeeController

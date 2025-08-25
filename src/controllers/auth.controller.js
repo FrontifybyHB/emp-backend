@@ -1,12 +1,11 @@
 // controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { findOneUser, createUser, findUserById, findEmployeeByUserId } from '../dao/user.dao.js';
+import { findOneUser, createUser, findUserById, findUsers } from '../dao/user.dao.js';
 import { generateTokens } from "../utils/jwt.js";
 import config from '../config/config.js';
 
 
-// @desc Register User
 export const registerUserController = async (req, res, next) => {
     try {
         const { username, email, password, adminCode } = req.body;
@@ -66,7 +65,6 @@ export const registerUserController = async (req, res, next) => {
     }
 };
 
-// @desc Login User
 export const loginUserController = async (req, res, next) => {
     try {
         const { username, email, password } = req.body;
@@ -102,8 +100,6 @@ export const loginUserController = async (req, res, next) => {
     }
 };
 
-
-// @desc Refresh Token
 export const refreshTokenController = async (req, res, next) => {
     try {
         const refreshToken = req.cookies.refreshToken;
@@ -141,7 +137,6 @@ export const refreshTokenController = async (req, res, next) => {
         res.json({
             message: 'Token refreshed successfully',
             success: true,
-            accessToken
         });
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
@@ -154,14 +149,21 @@ export const refreshTokenController = async (req, res, next) => {
     }
 };
 
-
-// @desc Logout User
 export const logoutUserController = async (req, res, next) => {
     try {
         res.clearCookie('refreshToken');
         res.clearCookie('accessToken');
 
         res.json({ message: 'Logged out successfully', success: true });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAllUsersController = async (req, res, next) => {
+    try {
+        const users = await findUsers();
+        res.json({ message: 'Users fetched successfully', success: true, data: users });
     } catch (error) {
         next(error);
     }
