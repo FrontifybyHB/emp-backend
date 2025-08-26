@@ -35,3 +35,7 @@ export const countEmployees = async (filter = {}) => {
 export const findUsers = async (filter = {}) => {
     return await userModel.find(filter).select('-password -refreshToken');
 };
+
+export const findEmployeeByUserId = async (userId) => {
+    return await Employee.findOne({ user: userId }).populate('user', 'username email role');
+};
