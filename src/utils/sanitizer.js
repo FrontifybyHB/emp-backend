@@ -65,3 +65,118 @@ const canViewSalary = (requestingUser, employee) => {
     
     return false;
 };
+
+export const sanitizeAttendance = (attendance, requestingUser) => {
+    if (!attendance) return null;
+    
+    const sanitized = {
+        id: attendance._id,
+        employee: attendance.employee,
+        date: attendance.date,
+        clockIn: attendance.clockIn,
+        clockOut: attendance.clockOut,
+        createdAt: attendance.createdAt,
+        updatedAt: attendance.updatedAt
+    };
+    
+    // Additional employee details only for authorized users
+    if (canViewEmployeeDetails(requestingUser, attendance)) {
+        sanitized.employeeDetails = attendance.employee;
+    }
+    
+    return sanitized;
+};
+
+export const sanitizeAttendanceList = (attendanceList, requestingUser) => {
+    if (!attendanceList || !Array.isArray(attendanceList)) return [];
+    
+    return attendanceList.map(attendance => sanitizeAttendance(attendance, requestingUser));
+};
+
+const canViewEmployeeDetails = (requestingUser, attendance) => {
+    if (!requestingUser) return false;
+    
+    // Admin and HR can view all employee details
+    if (requestingUser.isAdmin || requestingUser.role === 'admin' || requestingUser.role === 'hr') {
+        return true;
+    }
+    
+    // Managers can view their department employees
+    if (requestingUser.role === 'manager') {
+        return true; // Add department-specific logic here
+    }
+    
+    // Employees can view their own details
+    if (attendance.employee && attendance.employee._id && 
+        attendance.employee._id.toString() === requestingUser.id) {
+        return true;
+    }
+    
+    return false;
+};
+
+export const sanitizeLeave = (leave, requestingUser) => {
+    if (!leave) return null;
+    
+    const sanitized = {
+        id: leave._id,
+        employee: leave.employee,
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+        reason: leave.reason,
+        status: leave.status,
+        createdAt: leave.createdAt,
+        updatedAt: leave.updatedAt
+    };
+    
+    // Calculate leave duration
+    if (leave.startDate && leave.endDate) {
+        const start = new Date(leave.startDate);
+        const end = new Date(leave.endDate);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        sanitized.duration = diffDays;
+    }
+    
+    // Show rejection reason only if rejected and user has permission
+    if (leave.status === 'Rejected' && leave.rejectionReason && 
+        canViewRejectionReason(requestingUser, leave)) {
+        sanitized.rejectionReason = leave.rejectionReason;
+    }
+    
+    // Additional employee details only for authorized users
+    if (canViewEmployeeDetails(requestingUser, leave)) {
+        sanitized.employeeDetails = leave.employee;
+    }
+    
+    return sanitized;
+};
+
+export const sanitizeLeaveList = (leaveList, requestingUser) => {
+    if (!leaveList || !Array.isArray(leaveList)) return [];
+    
+    return leaveList.map(leave => sanitizeLeave(leave, requestingUser));
+};
+
+const canViewRejectionReason = (requestingUser, leave) => {
+    if (!requestingUser) return false;
+    
+    // Admin and HR can view all rejection reasons
+    if (requestingUser.isAdmin || requestingUser.role === 'admin' || requestingUser.role === 'hr') {
+        return true;
+    }
+    
+    // Managers can view their department's rejection reasons
+    if (requestingUser.role === 'manager') {
+        return true; // Add department-specific logic here
+    }
+    
+    // Employees can view their own rejection reasons
+    if (leave.employee && leave.employee._id && 
+        leave.employee._id.toString() === requestingUser.id) {
+        return true;
+    }
+    
+    return false;
+};
+
