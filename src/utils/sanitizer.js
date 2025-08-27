@@ -180,3 +180,88 @@ const canViewRejectionReason = (requestingUser, leave) => {
     return false;
 };
 
+export const sanitizePayroll = (payroll, requestingUser) => {
+    if (!payroll) return null;
+    
+    const sanitized = {
+        id: payroll._id,
+        employee: payroll.employee,
+        month: payroll.month,
+        year: payroll.year,
+        paidOn: payroll.paidOn,
+        createdAt: payroll.createdAt,
+        updatedAt: payroll.updatedAt
+    };
+    
+    // Show salary details only to authorized users
+    if (canViewSalaryDetails(requestingUser, payroll)) {
+        sanitized.basic = payroll.basic;
+        sanitized.allowance = payroll.allowance;
+        sanitized.deductions = payroll.deductions;
+        sanitized.tax = payroll.tax;
+        sanitized.netSalary = payroll.netSalary;
+    }
+    
+    // Show payslip URL only to authorized users
+    if (canViewPayslip(requestingUser, payroll)) {
+        sanitized.payslipUrl = payroll.payslipUrl;
+    }
+    
+    // Additional employee details only for authorized users
+    if (canViewEmployeeDetails(requestingUser, payroll)) {
+        sanitized.employeeDetails = payroll.employee;
+    }
+    
+    return sanitized;
+};
+
+export const sanitizePayrollList = (payrollList, requestingUser) => {
+    if (!payrollList || !Array.isArray(payrollList)) return [];
+    
+    return payrollList.map(payroll => sanitizePayroll(payroll, requestingUser));
+};
+
+const canViewSalaryDetails = (requestingUser, payroll) => {
+    if (!requestingUser) return false;
+    
+    // Admin and HR can view all salary details
+    if (requestingUser.isAdmin || requestingUser.role === 'admin' || requestingUser.role === 'hr') {
+        return true;
+    }
+    
+    // Managers can view their department's salary details
+    if (requestingUser.role === 'manager') {
+        return true; // Add department-specific logic here
+    }
+    
+    // Employees can view their own salary details
+    if (payroll.employee && payroll.employee._id && 
+        payroll.employee._id.toString() === requestingUser.id) {
+        return true;
+    }
+    
+    return false;
+};
+
+const canViewPayslip = (requestingUser, payroll) => {
+    if (!requestingUser) return false;
+    
+    // Admin and HR can view all payslips
+    if (requestingUser.isAdmin || requestingUser.role === 'admin' || requestingUser.role === 'hr') {
+        return true;
+    }
+    
+    // Managers can view their department's payslips
+    if (requestingUser.role === 'manager') {
+        return true; // Add department-specific logic here
+    }
+    
+    // Employees can view their own payslips
+    if (payroll.employee && payroll.employee._id && 
+        payroll.employee._id.toString() === requestingUser.id) {
+        return true;
+    }
+    
+    return false;
+};
+
