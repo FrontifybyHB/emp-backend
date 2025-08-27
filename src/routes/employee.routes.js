@@ -3,8 +3,10 @@ import {
     createEmployeeController,
     getEmployeesController,
     getEmployeeByIdController,
+    getMyProfileController,
     updateEmployeeController,
     deleteEmployeeController,
+    getEmployeesByDepartmentController
 } from '../controllers/employee.controller.js';
 import { createEmployeeValidator, updateEmployeeValidator } from '../middlewares/validator.middleaware.js';
 import { apiLimiter } from '../middlewares/ratelimit.middleware.js';
@@ -12,45 +14,61 @@ import { requireAuth, permit, requireAdmin } from '../middlewares/auth.middlewar
 
 const router = express.Router();
 
-router.post('/', 
-    apiLimiter, 
+// Create employee (Admin/HR only)
+router.post('/',
+    apiLimiter,
     requireAuth,
-    permit('admin', 'hr'), 
+    permit('admin', 'hr'),
     createEmployeeValidator,
     createEmployeeController
 );
 
-router.get('/', 
-    apiLimiter, 
+// Get all employees (Admin/HR/Manager)
+router.get('/',
+    apiLimiter,
     requireAuth,
-    permit('admin', 'hr', 'manager'), 
+    permit('admin', 'hr', 'manager'),
     getEmployeesController
 );
 
-router.get('/:id', 
-    apiLimiter, 
+// Get my profile (Employee can see their own profile)
+router.get('/me',
+    apiLimiter,
     requireAuth,
-    permit('admin', 'hr', 'manager', 'employee'), 
+    getMyProfileController
+);
+
+// Get employees by department (Admin/HR/Manager)
+router.get('/department/:department',
+    apiLimiter,
+    requireAuth,
+    permit('admin', 'hr', 'manager'),
+    getEmployeesByDepartmentController
+);
+
+// Get employee by ID (Admin/HR/Manager/Employee for own profile)
+router.get('/:id',
+    apiLimiter,
+    requireAuth,
+    permit('admin', 'hr', 'manager', 'employee'),
     getEmployeeByIdController
 );
 
-router.put('/:id', 
-    apiLimiter, 
+// Update employee (Admin/HR only)
+router.put('/:id',
+    apiLimiter,
     requireAuth,
-    permit('admin', 'hr'), 
+    permit('admin', 'hr'),
     updateEmployeeValidator,
     updateEmployeeController
 );
 
-router.delete('/:id', 
-    apiLimiter, 
+// Delete employee (Admin only)
+router.delete('/:id',
+    apiLimiter,
     requireAuth,
     requireAdmin,
-    permit('admin'), 
     deleteEmployeeController
 );
-
-
-
 
 export default router;
