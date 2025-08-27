@@ -35,8 +35,7 @@ app.use(apiLimiter);
 
 
 // Routes
-
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use("/api/employees", employeeRoutes); 
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/leave', leaveRoutes);
