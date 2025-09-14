@@ -2,7 +2,6 @@ import express from 'express';
 import { 
     registerUserController, 
     loginUserController, 
-    refreshTokenController, 
     logoutUserController,
     getAllUsersController 
 } from '../controllers/auth.controller.js';
@@ -25,10 +24,6 @@ router.post('/login',
     loginUserController
 );
 
-router.post('/refresh-token',
-    authLimiter,
-    refreshTokenController
-);
 
 // Protected routes
 router.post('/logout',

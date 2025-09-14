@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { findOneUser, createUser, findUserById, findUsers, updateUser, getAllUsers } from '../dao/user.dao.js';
-import { generateTokens, verifyRefreshToken } from "../utils/jwt.js";
+import { generateTokens } from "../utils/jwt.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { sanitizeUser } from "../utils/sanitizer.js";
 import config from '../config/config.js';
@@ -43,14 +43,11 @@ export const registerUserController = async (req, res, next) => {
         const user = await createUser(userData);
 
         // Generate tokens
-        const { accessToken, refreshToken } = generateTokens(user);
+        const { accessToken } = generateTokens(user);
 
-        // Save refresh token hash (not plain text)
-        const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-        await updateUser(user._id, { refreshToken: refreshTokenHash });
 
         // Set secure cookies
-        setSecureCookies(res, accessToken, refreshToken);
+        setSecureCookies(res, accessToken);
 
         return res.status(201).json({
             message: 'User registered successfully',
@@ -89,18 +86,11 @@ export const loginUserController = async (req, res, next) => {
             });
         }
         // Generate tokens
-        const { accessToken, refreshToken } = generateTokens(user);
+        const { accessToken } = generateTokens(user);
 
-        // Save refresh token hash
-        const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-
-        // Update user login info
-        await updateUser(user._id, {
-            refreshToken: refreshTokenHash,
-        });
 
         // Set secure cookies
-        setSecureCookies(res, accessToken, refreshToken);
+        setSecureCookies(res, accessToken);
 
         res.status(200).json({
             message: 'Login successful',
@@ -112,55 +102,6 @@ export const loginUserController = async (req, res, next) => {
     }
 };
 
-export const refreshTokenController = async (req, res, next) => {
-    try {
-        const refreshToken = req.cookies.refreshToken;
-
-        if (!refreshToken) {
-            return res.status(401).json({
-                message: 'Refresh token not found',
-                success: false
-            });
-        }
-
-        // Verify refresh token
-        const decoded = verifyRefreshToken(refreshToken);
-        if (!decoded) {
-            return res.status(401).json({
-                message: 'Invalid refresh token',
-                success: false
-            });
-        }
-
-        // Find user and verify stored refresh token
-        const user = await findUserById(decoded.id);
-        const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-
-        if (!user || user.refreshToken !== refreshTokenHash) {
-            return res.status(401).json({
-                message: 'Invalid refresh token',
-                success: false
-            });
-        }
-
-        // Generate new tokens
-        const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-
-        // Update refresh token hash
-        const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
-        await updateUser(user._id, { refreshToken: newRefreshTokenHash });
-
-        // Set new secure cookies
-        setSecureCookies(res, accessToken, newRefreshToken);
-
-        res.status(200).json({
-            message: 'Token refreshed successfully',
-            success: true
-        });
-    } catch (error) {
-        next(error);
-    }
-};
 
 export const logoutUserController = async (req, res, next) => {
     try {
@@ -231,7 +172,7 @@ const determineUserRole = (email, adminCode) => {
     return { role, isAdmin };
 };
 
-const setSecureCookies = (res, accessToken, refreshToken) => {
+const setSecureCookies = (res, accessToken) => {
     const cookieOptions = {
         httpOnly: true,
         sameSite: 'strict'
@@ -239,12 +180,8 @@ const setSecureCookies = (res, accessToken, refreshToken) => {
 
     res.cookie('accessToken', accessToken, {
         ...cookieOptions,
-        maxAge: 15 * 60 * 1000 // 15 minutes
+        maxAge: 1 * 24 * 60 * 60 * 1000 // 1 days
     });
 
-    res.cookie('refreshToken', refreshToken, {
-        ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
 };
 

@@ -1,4 +1,4 @@
-import { verifyAccessToken, verifyRefreshToken } from "../utils/jwt.js";
+import { verifyAccessToken } from "../utils/jwt.js";
 import { findUserById } from "../dao/user.dao.js";
 import crypto from 'crypto';
 
@@ -6,7 +6,6 @@ export const requireAuth = async (req, res, next) => {
     try {
         // Extract tokens
         const accessToken = extractAccessToken(req);
-        const refreshToken = extractRefreshToken(req);
         
         if (!accessToken) {
             return res.status(401).json({ 
@@ -15,6 +14,7 @@ export const requireAuth = async (req, res, next) => {
             });
         }
 
+    
         // Verify access token
         const payload = verifyAccessToken(accessToken);
         if (!payload) {
@@ -33,16 +33,6 @@ export const requireAuth = async (req, res, next) => {
             });
         }
 
-        // Verify refresh token if provided
-        if (refreshToken) {
-            const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-            if (user.refreshToken !== refreshTokenHash) {
-                return res.status(401).json({ 
-                    message: "Invalid refresh token",
-                    success: false 
-                });
-            }
-        }
 
         // Attach user and tokens to request
         req.user = {
@@ -53,7 +43,6 @@ export const requireAuth = async (req, res, next) => {
         
         req.tokens = {
             accessToken,
-            refreshToken
         };
 
         next();
@@ -108,8 +97,4 @@ const extractAccessToken = (req) => {
     }
     
     return null;
-};
-
-const extractRefreshToken = (req) => {
-    return req.cookies?.refreshToken || null;
 };

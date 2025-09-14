@@ -13,23 +13,13 @@ export const generateTokens = (user) => {
         payload,
         config.jwtSecret,
         { 
-            expiresIn: config.jwtExpiry || "15m",
+            expiresIn: config.jwtExpiry || "60m",
             issuer: 'ems-backend',
             audience: 'ems-client'
         }
     );
 
-    const refreshToken = jwt.sign(
-        { id: user._id, tokenType: 'refresh' },
-        config.jwtRefreshSecret,
-        { 
-            expiresIn: config.jwtRefreshExpiry || "7d",
-            issuer: 'ems-backend',
-            audience: 'ems-client'
-        }
-    );
-
-    return { accessToken, refreshToken };
+    return { accessToken };
 };
 
 export const verifyAccessToken = (token) => {
