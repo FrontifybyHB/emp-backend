@@ -4,19 +4,18 @@ import crypto from 'crypto';
 
 export const requireAuth = async (req, res, next) => {
     try {
-        // Extract tokens
-        const accessToken = extractAccessToken(req);
+        // Extract token
+        const token = extractAccessToken(req);
         
-        if (!accessToken) {
+        if (!token) {
             return res.status(401).json({ 
-                message: "Access token required",
+                message: "Token required",
                 success: false 
             });
         }
 
-    
-        // Verify access token
-        const payload = verifyAccessToken(accessToken);
+        // Verify token
+        const payload = verifyAccessToken(token);
         if (!payload) {
             return res.status(401).json({ 
                 message: "Invalid or expired token",
@@ -25,7 +24,7 @@ export const requireAuth = async (req, res, next) => {
         }
 
         // Verify user exists
-        const user = await findUserById(payload.id, 'role isAdmin refreshToken');
+        const user = await findUserById(payload.id, 'role isAdmin');
         if (!user) {
             return res.status(401).json({ 
                 message: "User not found",
@@ -33,17 +32,14 @@ export const requireAuth = async (req, res, next) => {
             });
         }
 
-
-        // Attach user and tokens to request
+        // Attach user and token to request
         req.user = {
             id: payload.id,
             role: user.role,
             isAdmin: user.isAdmin
         };
         
-        req.tokens = {
-            accessToken,
-        };
+        req.token = token;
 
         next();
     } catch (error) {
@@ -92,8 +88,8 @@ const extractAccessToken = (req) => {
         return auth.split(" ")[1];
     }
     
-    if (req.cookies?.accessToken) {
-        return req.cookies.accessToken;
+    if (req.cookies?.token) {
+        return req.cookies.token;
     }
     
     return null;

@@ -13,7 +13,7 @@ export const generateTokens = (user) => {
         payload,
         config.jwtSecret,
         { 
-            expiresIn: config.jwtExpiry || "60m",
+            expiresIn: config.jwtExpiry || "24h", // Increased expiry time
             issuer: 'ems-backend',
             audience: 'ems-client'
         }
@@ -28,23 +28,6 @@ export const verifyAccessToken = (token) => {
             issuer: 'ems-backend',
             audience: 'ems-client'
         });
-    } catch (error) {
-        return null;
-    }
-};
-
-export const verifyRefreshToken = (token) => {
-    try {
-        const decoded = jwt.verify(token, config.jwtRefreshSecret, {
-            issuer: 'ems-backend',
-            audience: 'ems-client'
-        });
-        
-        if (decoded.tokenType !== 'refresh') {
-            return null;
-        }
-        
-        return decoded;
     } catch (error) {
         return null;
     }

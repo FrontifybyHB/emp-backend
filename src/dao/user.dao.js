@@ -28,12 +28,10 @@ export const findUserById = async (id, selectFields = null) => {
     }
 };
 
-export const updateUser = async (id, updateData) => {
+export const updateUser = async (id) => {
     try {
         return await User.findByIdAndUpdate(
-            id, 
-            updateData, 
-            { new: true, runValidators: true }
+            id
         );
     } catch (error) {
         throw new Error(`Error updating user: ${error.message}`);

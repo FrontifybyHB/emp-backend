@@ -45,9 +45,13 @@ export const registerUserController = async (req, res, next) => {
         // Generate tokens
         const { accessToken } = generateTokens(user);
 
-
-        // Set secure cookies
-        setSecureCookies(res, accessToken);
+        // Set JWT token in HTTP-only cookie
+        res.cookie('token', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // true in production
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
 
         return res.status(201).json({
             message: 'User registered successfully',
@@ -88,9 +92,13 @@ export const loginUserController = async (req, res, next) => {
         // Generate tokens
         const { accessToken } = generateTokens(user);
 
-
-        // Set secure cookies
-        setSecureCookies(res, accessToken);
+        // Set JWT token in HTTP-only cookie
+        res.cookie('token', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // true in production
+            sameSite: 'strict',
+            maxAge: req.body.rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 // 30 days if remember me, else 24 hours
+        });
 
         res.status(200).json({
             message: 'Login successful',
@@ -105,19 +113,15 @@ export const loginUserController = async (req, res, next) => {
 
 export const logoutUserController = async (req, res, next) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
+
+        const userId = req.body.userId;
 
         // If user is authenticated, clear their refresh token from DB
-        if (req.user?.id && refreshToken) {
-            await updateUser(req.user.id, { refreshToken: null });
+        if (userId) {
+            await updateUser(userId);
         }
 
-        // Clear cookies with secure options
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            sameSite: 'strict'
-        });
-        res.clearCookie('accessToken', {
+        res.clearCookie('token', {
             httpOnly: true,
             sameSite: 'strict'
         });
@@ -173,14 +177,13 @@ const determineUserRole = (email, adminCode) => {
 };
 
 const setSecureCookies = (res, accessToken) => {
-    const cookieOptions = {
-        httpOnly: true,
-        sameSite: 'strict'
-    };
+    // Set secure cookies
 
-    res.cookie('accessToken', accessToken, {
-        ...cookieOptions,
-        maxAge: 1 * 24 * 60 * 60 * 1000 // 1 days
+    res.cookie("token", accessToken, {
+        httpOnly: true,   // not accessible from JS (more secure)
+        secure: true,     // cookie only sent over HTTPS
+        sameSite: "strict", // CSRF protection
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
 };
