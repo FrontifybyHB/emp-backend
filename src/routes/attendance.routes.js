@@ -3,7 +3,7 @@ import {
     clockInController, 
     clockOutController, 
     summaryController, 
-    allEmployeesSummaryController,
+    getAllEmployeesAttendanceController,
     todayAttendanceController,
     employeeAttendanceController
 } from "../controllers/attendance.controller.js";
@@ -50,7 +50,7 @@ router.get("/all-employees-summary",
     requireAuth,
     permit('admin', 'hr', 'manager'),
     apiLimiter,
-    allEmployeesSummaryController
+    getAllEmployeesAttendanceController
 );
 
 // Get specific employee attendance (Admin/HR/Manager)

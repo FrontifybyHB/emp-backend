@@ -1,11 +1,12 @@
 import { 
     createClockIn, 
     updateClockOut, 
-    getSummary, 
-    getAllEmployeesSummary,
+    getSummary,
     getTodayAttendance,
 } from "../dao/attendance.dao.js";
 import { sanitizeAttendance, sanitizeAttendanceList } from "../utils/sanitizer.js";
+import { fetchAllEmployeeAttendance } from '../dao/attendance.dao.js';
+
 
 export const clockInController = async (req, res, next) => {
     try {
@@ -88,48 +89,28 @@ export const summaryController = async (req, res, next) => {
     }
 };
 
-export const allEmployeesSummaryController = async (req, res, next) => {
+
+export const getAllEmployeesAttendanceController = async (req, res) => {
     try {
-        const { 
-            employeeId,
-            department,
-            startDate, 
-            endDate, 
-            page = 1, 
-            limit = 50 
-        } = req.query;
+        // Extract query parameters
+        const { startDate, endDate, page, limit, sort } = req.query;
 
-        // Check permissions for department access
-        if (department && !canAccessDepartment(req.user, department)) {
-            return res.status(403).json({
-                success: false,
-                message: 'Access denied for this department'
-            });
-        }
-
-        const options = {
-            employeeId,
-            department,
+        // Call DAO to fetch attendance
+        const result = await fetchAllEmployeeAttendance({
             startDate,
             endDate,
-            page: parseInt(page),
-            limit: Math.min(parseInt(limit), 100)
-        };
-
-        const result = await getAllEmployeesSummary(req.user, options);
-        
-        res.status(200).json({ 
-            success: true, 
-            message: 'All employees attendance retrieved successfully',
-            data: {
-                attendance: sanitizeAttendanceList(result.attendance, req.user),
-                pagination: result.pagination
-            }
+            page,
+            limit,
+            sort
         });
+
+        return res.status(200).json(result);
     } catch (error) {
-        next(error);
+        return res.status(500).json({ message: `Error fetching attendance: ${error.message}` });
     }
 };
+
+
 
 export const todayAttendanceController = async (req, res, next) => {
     try {

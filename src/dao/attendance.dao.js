@@ -136,25 +136,12 @@ export const getSummary = async (userId, options = {}) => {
     }
 };
 
-export const getAllEmployeesSummary = async (requestingUser, options = {}) => {
+export const fetchAllEmployeeAttendance = async (options = {}) => {
     try {
-        const { 
-            employeeId,
-            department,
-            startDate, 
-            endDate, 
-            page = 1, 
-            limit = 50,
-            sort = { date: -1 }
-        } = options;
+        const { startDate, endDate, page = 1, limit = 50, sort = { date: -1 } } = options;
 
-        // Build filter based on permissions and parameters
-        const filter = await buildAttendanceFilter(requestingUser, {
-            employeeId,
-            department,
-            startDate,
-            endDate
-        });
+        // Build the filter using the helper
+        const filter = buildAttendanceFilter({ startDate, endDate });
 
         const skip = (page - 1) * limit;
 
@@ -177,9 +164,10 @@ export const getAllEmployeesSummary = async (requestingUser, options = {}) => {
             }
         };
     } catch (error) {
-        throw new Error(`Error fetching all employees attendance: ${error.message}`);
+        throw new Error(`DAO error fetching all employees attendance: ${error.message}`);
     }
 };
+
 
 export const getTodayAttendance = async (userId) => {
     try {
@@ -204,7 +192,7 @@ export const getTodayAttendance = async (userId) => {
 
 
 // Helper function to build attendance filter based on user permissions
-const buildAttendanceFilter = async (requestingUser, params) => {
+export const buildAttendanceFilter = (params) => {
     const filter = {};
 
     // Apply date filters
@@ -212,21 +200,6 @@ const buildAttendanceFilter = async (requestingUser, params) => {
         filter.date = {};
         if (params.startDate) filter.date.$gte = new Date(params.startDate);
         if (params.endDate) filter.date.$lte = new Date(params.endDate);
-    }
-
-    // Apply employee filter
-    if (params.employeeId) {
-        filter.employee = params.employeeId;
-    }
-
-    // Apply department filter for managers
-    if (params.department) {
-        // Get employees from specific department
-        const employees = await findEmployeesByDepartment(params.department, { 
-            select: '_id',
-            populate: false 
-        });
-        filter.employee = { $in: employees.employees.map(emp => emp._id) };
     }
 
     return filter;
