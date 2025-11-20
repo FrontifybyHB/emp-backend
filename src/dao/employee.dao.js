@@ -42,13 +42,14 @@ export const findEmployees = async (filter = {}, options = {}) => {
             query = query.select(select);
         }
 
-        const employees = await query
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        const total = await Employee.countDocuments(filter);
+        const [employees, total] = await Promise.all([
+            query
+                .sort(sort)
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Employee.countDocuments(filter)
+        ]);
 
         return {
             employees,

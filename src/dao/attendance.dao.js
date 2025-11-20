@@ -28,8 +28,8 @@ export const createClockIn = async (userId) => {
         // Create or update attendance record
         const attendance = await Attendance.findOneAndUpdate(
             { employee: employee._id, date: dateOnly },
-            { 
-                $set: { 
+            {
+                $set: {
                     clockIn: { time: timeString },
                     employee: employee._id,
                     date: dateOnly
@@ -89,10 +89,10 @@ export const updateClockOut = async (userId) => {
 
 export const getSummary = async (userId, options = {}) => {
     try {
-        const { 
-            startDate, 
-            endDate, 
-            page = 1, 
+        const {
+            startDate,
+            endDate,
+            page = 1,
             limit = 30,
             sort = { date: -1 }
         } = options;
@@ -113,14 +113,15 @@ export const getSummary = async (userId, options = {}) => {
 
         const skip = (page - 1) * limit;
 
-        const attendance = await Attendance.find(dateFilter)
-            .populate('employee', 'firstName lastName department')
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        const total = await Attendance.countDocuments(dateFilter);
+        const [attendance, total] = await Promise.all([
+            Attendance.find(dateFilter)
+                .populate('employee', 'firstName lastName department')
+                .sort(sort)
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Attendance.countDocuments(dateFilter)
+        ]);
 
         return {
             attendance,
@@ -145,14 +146,15 @@ export const fetchAllEmployeeAttendance = async (options = {}) => {
 
         const skip = (page - 1) * limit;
 
-        const attendance = await Attendance.find(filter)
-            .populate('employee', 'firstName lastName department role')
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        const total = await Attendance.countDocuments(filter);
+        const [attendance, total] = await Promise.all([
+            Attendance.find(filter)
+                .populate('employee', 'firstName lastName department role')
+                .sort(sort)
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Attendance.countDocuments(filter)
+        ]);
 
         return {
             attendance,

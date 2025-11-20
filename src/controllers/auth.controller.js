@@ -43,14 +43,21 @@ export const registerUserController = async (req, res, next) => {
         const user = await createUser(userData);
 
         // Generate tokens
-        const { accessToken } = generateTokens(user);
+        const { accessToken, refreshToken } = generateTokens(user);
 
-        // Set JWT token in HTTP-only cookie
-        res.cookie('token', accessToken, {
+        // Set JWT tokens in HTTP-only cookies
+        res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // true in production
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         return res.status(201).json({
@@ -90,14 +97,21 @@ export const loginUserController = async (req, res, next) => {
             });
         }
         // Generate tokens
-        const { accessToken } = generateTokens(user);
+        const { accessToken, refreshToken } = generateTokens(user);
 
-        // Set JWT token in HTTP-only cookie
-        res.cookie('token', accessToken, {
+        // Set JWT tokens in HTTP-only cookies
+        res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // true in production
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: req.body.rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 // 30 days if remember me, else 24 hours
+            maxAge: req.body.rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.status(200).json({
@@ -121,7 +135,12 @@ export const logoutUserController = async (req, res, next) => {
             await updateUser(userId);
         }
 
-        res.clearCookie('token', {
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            sameSite: 'strict'
+        });
+
+        res.clearCookie('refreshToken', {
             httpOnly: true,
             sameSite: 'strict'
         });
@@ -175,16 +194,3 @@ const determineUserRole = (email, adminCode) => {
 
     return { role, isAdmin };
 };
-
-const setSecureCookies = (res, accessToken) => {
-    // Set secure cookies
-
-    res.cookie("token", accessToken, {
-        httpOnly: true,   // not accessible from JS (more secure)
-        secure: true,     // cookie only sent over HTTPS
-        sameSite: "strict", // CSRF protection
-        maxAge: 1000 * 60 * 60 * 24, // 1 day
-    });
-
-};
-

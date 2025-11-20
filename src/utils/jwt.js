@@ -45,7 +45,7 @@ export const verifyAccessToken = (token) => {
 
 export const verifyRefreshToken = (token) => {
     try {
-        return jwt.verify(token, config.jwtSecret, {
+        return jwt.verify(token, config.jwtRefresh, {
             issuer: 'ems-backend',
             audience: 'ems-client'
         });
