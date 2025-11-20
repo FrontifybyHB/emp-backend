@@ -12,17 +12,38 @@ export const generateTokens = (user) => {
     const accessToken = jwt.sign(
         payload,
         config.jwtSecret,
-        { 
-            expiresIn: config.jwtExpiry || "24h", // Increased expiry time
+        {
+            expiresIn: config.jwtExpiry || "24h",
             issuer: 'ems-backend',
             audience: 'ems-client'
         }
     );
 
-    return { accessToken };
+    const refreshToken = jwt.sign(
+        { id: user._id },
+        config.jwtRefresh,
+        {
+            expiresIn: "7d",
+            issuer: 'ems-backend',
+            audience: 'ems-client'
+        }
+    );
+
+    return { accessToken, refreshToken };
 };
 
 export const verifyAccessToken = (token) => {
+    try {
+        return jwt.verify(token, config.jwtSecret, {
+            issuer: 'ems-backend',
+            audience: 'ems-client'
+        });
+    } catch (error) {
+        return null;
+    }
+};
+
+export const verifyRefreshToken = (token) => {
     try {
         return jwt.verify(token, config.jwtSecret, {
             issuer: 'ems-backend',

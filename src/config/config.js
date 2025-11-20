@@ -10,6 +10,7 @@ const config = {
     CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
     jwtSecret: process.env.JWT_SECRET,
     jwtExpiry: process.env.JWT_EXPIRY,
+    jwtRefresh: process.env.REFRESH_SECRET,
 };
 
 export default config;

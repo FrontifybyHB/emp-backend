@@ -6,6 +6,7 @@ const employeeSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
+            index: true,
         },
         firstName: {
             type: String,
@@ -17,11 +18,13 @@ const employeeSchema = new mongoose.Schema(
         },
         department: {
             type: String,
-            required: true
+            required: true,
+            index: true,
         },
         role: {
             type: String,
-            required: true
+            required: true,
+            index: true,
         },
         joiningDate: {
             type: Date,
